@@ -1,10 +1,10 @@
 import sys
-import requests
 import asyncio
 import aiohttp
-
 from urllib import parse
+
 from crawl import PageData, normalize_url, extract_page_data
+from json_report import write_json_report
 
 class AsyncCrawler:
     def __init__(self, base_url: str, max_concurrency: int, max_pages: int) -> None:
@@ -128,7 +128,8 @@ async def main():
     
     base_url, max_concurrency, max_pages = sys.argv[1], sys.argv[2], sys.argv[3]
     data = await crawl_site_async(base_url, int(max_concurrency), int(max_pages))
-    print(f"Found {len(data)} pages.")
+
+    write_json_report(data)
 
     sys.exit(0)
 
