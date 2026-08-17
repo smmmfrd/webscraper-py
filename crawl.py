@@ -21,3 +21,31 @@ def get_first_paragraph_from_html(html: str) -> str:
     paragraph = main.find('p') if isinstance(main, Tag) else soup.find('p')
 
     return paragraph.get_text(strip=True) if isinstance(paragraph, Tag) else ""
+
+def get_urls_from_html(html: str, base_url: str) -> list[str]:
+    soup = BeautifulSoup(html, 'html.parser')
+
+    anchors = soup.find_all('a')
+    links :list[str] = []
+    for a in anchors:
+        link = a.get("href") if isinstance(a, Tag) else ""
+        if isinstance(link, str):
+            if ":" not in link:
+                link = base_url + link
+            links.append(link)
+
+    return links
+
+def get_images_from_html(html: str, base_url: str) -> list[str]:
+    soup = BeautifulSoup(html, 'html.parser')
+
+    imgs = soup.find_all('img')
+    links :list[str] = []
+    for i in imgs:
+        link = i.get("src") if isinstance(i, Tag) else ""
+        if isinstance(link, str):
+            if ":" not in link:
+                link = base_url + link
+            links.append(link)
+    
+    return links
