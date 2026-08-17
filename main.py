@@ -1,6 +1,7 @@
 import sys
 import requests
-# from bs4 import BeautifulSoup
+from urllib import parse
+from crawl import PageData, normalize_url, extract_page_data
 
 def main():
     if len(sys.argv) < 2:
@@ -12,9 +13,31 @@ def main():
         sys.exit(1)
     
     base_url = sys.argv[1]
-    print("starting crawl of: ", base_url)
-    print(get_html(base_url))
-    
+    data = crawl_page(base_url, base_url, {})
+    print(f"Found {len(data)} pages.")
+
+
+def crawl_page(base_url: str, current_url: str, page_data: dict[str, PageData]) -> dict[str, PageData]:
+    # Check domains match first
+    if parse.urlsplit(base_url).netloc != parse.urlsplit(current_url).netloc:
+        return page_data
+
+    normalized_current = normalize_url(current_url)
+
+    if normalized_current in page_data:
+        return page_data
+
+    print(f"crawling {current_url}")
+    html = safe_get_html(current_url)
+    if html is None:
+        return page_data
+    data = extract_page_data(html, base_url)
+    page_data[normalized_current] = data
+
+    for url in data.get('outgoing_links'):
+        page_data = crawl_page(base_url, url, page_data)
+
+    return page_data
 
 def get_html(url: str) -> str:
     try:
@@ -31,6 +54,13 @@ def get_html(url: str) -> str:
         raise Exception(f"No html found at {url}: {content_type}")
 
     return r.text
+
+def safe_get_html(url: str) -> str | None:
+    try:
+        return get_html(url)
+    except Exception as e:
+        print(f"{e}")
+        return None
 
 if __name__ == "__main__":
     main()
